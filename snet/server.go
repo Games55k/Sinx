@@ -19,9 +19,9 @@ type Server struct {
 	//当前Server的链接管理器
 	ConnMgr siface.IConnManager
 	//该Server的连接创建时Hook函数
-	OnConnStart func(conn siface.IConnection)
+	OnConnStart func(conn siface.IConn)
 	//该Server的连接断开时的Hook函数
-	OnConnStop func(conn siface.IConnection)
+	OnConnStop func(conn siface.IConn)
 }
 
 // 开启 server 服务（无阻塞）
@@ -109,17 +109,17 @@ func (s *Server) GetConnMgr() siface.IConnManager {
 }
 
 // 设置该Server的连接创建时Hook函数
-func (s *Server) SetOnConnStart(hookFunc func(siface.IConnection)) {
+func (s *Server) SetOnConnStart(hookFunc func(siface.IConn)) {
 	s.OnConnStart = hookFunc
 }
 
 // 设置该Server的连接断开时的Hook函数
-func (s *Server) SetOnConnStop(hookFunc func(siface.IConnection)) {
+func (s *Server) SetOnConnStop(hookFunc func(siface.IConn)) {
 	s.OnConnStop = hookFunc
 }
 
 // 调用连接OnConnStart Hook函数
-func (s *Server) CallOnConnStart(conn siface.IConnection) {
+func (s *Server) CallOnConnStart(conn siface.IConn) {
 	if s.OnConnStart != nil {
 		fmt.Println("[Sinx] CallOnConnStart....")
 		s.OnConnStart(conn)
@@ -127,7 +127,7 @@ func (s *Server) CallOnConnStart(conn siface.IConnection) {
 }
 
 // 调用连接OnConnStop Hook函数
-func (s *Server) CallOnConnStop(conn siface.IConnection) {
+func (s *Server) CallOnConnStop(conn siface.IConn) {
 	if s.OnConnStop != nil {
 		fmt.Println("[Sinx] CallOnConnStop....")
 		s.OnConnStop(conn)

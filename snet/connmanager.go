@@ -9,18 +9,18 @@ import (
 )
 
 type ConnManager struct {
-	connections map[uint32]siface.IConnection //管理的连接信息
+	connections map[uint32]siface.IConn //管理的连接信息
 	connLock    sync.RWMutex                  //读写连接的读写锁
 }
 
 func NewConnManager() *ConnManager {
 	return &ConnManager{
-		connections: make(map[uint32]siface.IConnection),
+		connections: make(map[uint32]siface.IConn),
 	}
 }
 
 // 添加链接
-func (connMgr *ConnManager) Add(conn siface.IConnection) {
+func (connMgr *ConnManager) Add(conn siface.IConn) {
 	//保护共享资源Map 加写锁
 	connMgr.connLock.Lock()
 	defer connMgr.connLock.Unlock()
@@ -32,7 +32,7 @@ func (connMgr *ConnManager) Add(conn siface.IConnection) {
 }
 
 // 删除连接
-func (connMgr *ConnManager) Remove(conn siface.IConnection) {
+func (connMgr *ConnManager) Remove(conn siface.IConn) {
 	//保护共享资源Map 加写锁
 	connMgr.connLock.Lock()
 	defer connMgr.connLock.Unlock()
@@ -44,7 +44,7 @@ func (connMgr *ConnManager) Remove(conn siface.IConnection) {
 }
 
 // 利用ConnID获取链接
-func (connMgr *ConnManager) Get(connID uint32) (siface.IConnection, error) {
+func (connMgr *ConnManager) Get(connID uint32) (siface.IConn, error) {
 	//保护共享资源Map 加读锁
 	connMgr.connLock.RLock()
 	defer connMgr.connLock.RUnlock()

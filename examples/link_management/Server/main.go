@@ -18,7 +18,7 @@ func (this *PingRouter) Handle(request siface.IRequest) {
 	//先读取客户端的数据，再回写ping...ping...ping
 	fmt.Println("recv from client : msgId=", request.GetMsgID(), ", data=", string(request.GetData()))
 
-	err := request.GetConnection().SendBuffMsg(0, []byte("ping...ping...ping"))
+	err := request.GetConn().SendBuffMsg(0, []byte("ping...ping...ping"))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -34,14 +34,14 @@ func (this *HelloSinxRouter) Handle(request siface.IRequest) {
 	//先读取客户端的数据，再回写ping...ping...ping
 	fmt.Println("recv from client : msgId=", request.GetMsgID(), ", data=", string(request.GetData()))
 
-	err := request.GetConnection().SendBuffMsg(1, []byte("Hello Sinx Router"))
+	err := request.GetConn().SendBuffMsg(1, []byte("Hello Sinx Router"))
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
 // 创建连接的时候执行
-func DoConnectionBegin(conn siface.IConnection) {
+func DoConnectionBegin(conn siface.IConn) {
 	fmt.Println("DoConnecionBegin is Called ... ")
 	err := conn.SendMsg(2, []byte("DoConnection BEGIN..."))
 	if err != nil {
@@ -50,7 +50,7 @@ func DoConnectionBegin(conn siface.IConnection) {
 }
 
 // 连接断开的时候执行
-func DoConnectionLost(conn siface.IConnection) {
+func DoConnectionLost(conn siface.IConn) {
 	fmt.Println("DoConneciotnLost is Called ... ")
 }
 

@@ -16,7 +16,7 @@ type helloRouter struct {
 func (h *helloRouter) Handle(request siface.IRequest) {
 	// 请求，直接回复响应
 	fmt.Println("[Sinx] Received:", string(request.GetData()))
-	err := request.GetConnection().SendMsg(0, []byte("received"))
+	err := request.GetConn().SendMsg(0, []byte("received"))
 	if err != nil {
 		fmt.Println("[Sinx] error:", err)
 	}
@@ -27,7 +27,7 @@ func main() {
 	s := snet.NewServer()
 	s.AddRouter(srouter.MsgIDHeartbeatRequest, &srouter.HeartbeatPingRouter{})
 	s.AddRouter(srouter.MsgIDHeartbeatResponse, &srouter.HeartbeatPongRouter{})
-	s.SetOnConnStart(func(conn siface.IConnection) {
+	s.SetOnConnStart(func(conn siface.IConn) {
 		go shook.StartHeartbeat(conn)
 		go shook.StartHeartbeatChecker(conn)
 	})

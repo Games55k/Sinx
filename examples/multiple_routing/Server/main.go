@@ -18,7 +18,7 @@ func (this *PingRouter) Handle(request siface.IRequest) {
 	//先读取客户端的数据，再回写ping...ping...ping
 	fmt.Println("recv from client : msgId=", request.GetMsgID(), ", data=", string(request.GetData()))
 
-	err := request.GetConnection().SendMsg(0, []byte("ping...ping...ping"))
+	err := request.GetConn().SendMsg(0, []byte("ping...ping...ping"))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -33,7 +33,7 @@ func (this *HelloCinxRouter) Handle(request siface.IRequest) {
 	//先读取客户端的数据，再回写ping...ping...ping
 	fmt.Println("recv from client : msgId=", request.GetMsgID(), ", data=", string(request.GetData()))
 
-	err := request.GetConnection().SendMsg(1, []byte("Hello Sinx Router"))
+	err := request.GetConn().SendMsg(1, []byte("Hello Sinx Router"))
 	if err != nil {
 		fmt.Println(err)
 	}
