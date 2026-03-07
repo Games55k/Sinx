@@ -14,7 +14,7 @@ type GlobalObj struct {
 	TcpPort          int            // 当前服务器主机监听端口号
 	Name             string         // 当前服务器名称
 	Version          string         // 当前Sinx版本号
-	MaxPacketSize 	 uint32         // 允许的最大包长度
+	MaxPacketSize    uint32         // 允许的最大包长度
 	MaxConn          int            // 当前服务器主机允许的最大连接个数
 	WorkerPoolSize   uint32         //业务工作Worker池的数量
 	MaxWorkerTaskLen uint32         //业务工作Worker对应负责的任务队列最大任务存储数量
@@ -43,7 +43,7 @@ func (g *GlobalObj) Reload() {
 func init() {
 	GlobalObject = &GlobalObj{
 		Name:             "SinxServerApp",
-		Version:          "V0.7",
+		Version:          "0.1",
 		TcpPort:          7777,
 		Host:             "0.0.0.0",
 		MaxConn:          12000,
