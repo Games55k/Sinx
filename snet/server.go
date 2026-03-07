@@ -16,8 +16,8 @@ type Server struct {
 	IPVersion string
 	IP        string
 	Port      int
-	//当前Server由用户绑定的回调router,也就是Server注册的链接对应的处理业务
-	Router    siface.IRouter
+	//当前Server的消息管理模块，用来绑定MsgId和对应的处理方法
+	msgHandler siface.IMsgHandle
 }
 
 // ============== 定义当前客户端链接的handle api ===========
@@ -75,7 +75,7 @@ func (s *Server) Start() {
 			//3.2 TODO Server.Start() 设置服务器最大连接控制,如果超过最大连接，那么则关闭此新的连接
 
 			//3.3 处理该新连接请求的 业务 方法， 此时应该有 handler 和 conn是绑定的
-			dealConn := NewConntion(conn, cid, s.Router)
+			dealConn := NewConntion(conn, cid, s.msgHandler)
 			cid++
 
 			//3.4 启动当前链接的处理业务
@@ -102,8 +102,8 @@ func (s *Server) Serve() {
 }
 
 // 路由功能：给当前服务注册一个路由业务方法，供客户端链接处理使用
-func (s *Server) AddRouter(router siface.IRouter) {
-	s.Router = router
+func (s *Server) AddRouter(msgId uint32, router siface.IRouter) {
+	s.msgHandler.AddRouter(msgId, router)
 
 	fmt.Println("Add Router succ! ")
 }
@@ -113,12 +113,11 @@ func NewServer() siface.IServer {
 	//先初始化全局配置文件
 	sutils.GlobalObject.Reload()
 	s := &Server{
-		Name:      sutils.GlobalObject.Name,
-		IPVersion: "tcp4",
-		IP:        sutils.GlobalObject.Host,
-		Port:      sutils.GlobalObject.TcpPort,
-		Router:    nil,
+		Name:       sutils.GlobalObject.Name,
+		IPVersion:  "tcp4",
+		IP:         sutils.GlobalObject.Host,
+		Port:       sutils.GlobalObject.TcpPort,
+		msgHandler: NewMsgHandle(),
 	}
-
 	return s
 }

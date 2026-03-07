@@ -14,19 +14,19 @@ type Connection struct {
 	ConnID   uint32
 	isClosed bool
 
-	//该连接的处理方法router
-	Router siface.IRouter
+	//消息管理MsgId和对应处理方法的消息管理模块
+	MsgHandler siface.IMsgHandle
 
 	ExitBuffChan chan bool
 }
 
 // 创建连接的方法
-func NewConntion(conn *net.TCPConn, connID uint32, router siface.IRouter) *Connection {
+func NewConntion(conn *net.TCPConn, connID uint32, msgHandler siface.IMsgHandle) *Connection {
 	c := &Connection{
 		Conn:         conn,
 		ConnID:       connID,
 		isClosed:     false,
-		Router:       router,
+		MsgHandler:   msgHandler,
 		ExitBuffChan: make(chan bool, 1),
 	}
 
@@ -75,13 +75,8 @@ func (c *Connection) StartReader() {
 			conn: c,
 			msg:  msg,
 		}
-		//从路由Routers 中找到注册绑定Conn的对应Handle
-		go func(request siface.IRequest) {
-			//执行注册的路由方法
-			c.Router.PreHandle(request)
-			c.Router.Handle(request)
-			c.Router.PostHandle(request)
-		}(&req)
+		//从绑定好的消息和对应的处理方法中执行对应的Handle方法
+		go c.MsgHandler.DoMsgHandler(&req)
 	}
 }
 

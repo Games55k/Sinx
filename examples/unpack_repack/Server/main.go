@@ -28,7 +28,7 @@ func (this *PingRouter) Handle(request siface.IRequest) {
 func main() {
 	s := snet.NewServer()
 
-	s.AddRouter(&PingRouter{})
+	s.AddRouter(0, &PingRouter{})
 
 	s.Serve()
 }
