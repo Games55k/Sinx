@@ -11,7 +11,7 @@ import (
 // iServer 接口实现，定义一个Server服务类
 type Server struct {
 	Name       string
-	TcpVersion string
+	IPVersion  string
 	IP         string
 	Port       int
 	//当前Server的消息管理模块，用来绑定MsgId和对应的处理方法
@@ -38,16 +38,16 @@ func (s *Server) Start() {
 		//开启工作池
 		s.msgHandler.StartWorkerPool()
 		//封装 tcp 地址
-		addr, err := net.ResolveTCPAddr(s.TcpVersion, fmt.Sprintf("%s:%d", s.IP, s.Port))
+		addr, err := net.ResolveTCPAddr(s.IPVersion, fmt.Sprintf("%s:%d", s.IP, s.Port))
 		if err != nil {
 			fmt.Println("[Sinx] resolve tcp address err: ", err)
 			return
 		}
 
 		//创建监听 socket
-		listenner, err := net.ListenTCP(s.TcpVersion, addr)
+		listenner, err := net.ListenTCP(s.IPVersion, addr)
 		if err != nil {
-			fmt.Println("[Sinx] listen", s.TcpVersion, "err", err)
+			fmt.Println("[Sinx] listen", s.IPVersion, "err", err)
 			return
 		}
 
@@ -139,7 +139,7 @@ func NewServer() siface.IServer {
 	sutils.GlobalObject.Reload()
 	s := &Server{
 		Name:       sutils.GlobalObject.Name,
-		TcpVersion: "tcp4",
+		IPVersion:  "tcp4",
 		IP:         sutils.GlobalObject.Host,
 		Port:       sutils.GlobalObject.TcpPort,
 		msgHandler: NewMsgHandle(),

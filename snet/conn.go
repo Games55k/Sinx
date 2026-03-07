@@ -52,6 +52,21 @@ func NewConntion(server siface.IServer, conn *net.TCPConn, connID uint32, msgHan
 	return c
 }
 
+func NewClientConn(client siface.IClient, conn *net.TCPConn) siface.IConn {
+	c := &Connection{
+		TcpServer:    NewServer(), // TODO: 临时创建一个server，后续需要修改
+		Conn:         conn,
+		ConnID:       0, // ignore
+		isClosed:     false,
+		MsgHandler:   client.GetMsgHandler(),
+		ExitBuffChan: make(chan bool, 1),
+		msgChan:      make(chan []byte), //msgChan初始化
+		msgBuffChan:  make(chan []byte, sutils.GlobalObject.MaxMsgChanLen),
+		property:     make(map[string]interface{}), //对链接属性map初始化
+	}
+	return c
+}
+
 func (c *Connection) StartReader() {
 	fmt.Println("Reader Goroutine is  running")
 	defer fmt.Println(c.RemoteAddr().String(), " conn reader exit!")
