@@ -9,6 +9,6 @@ type IServer interface {
 	GetMsgHandler() IMsgHandle
 	SetOnConnStart(func(IConn))
 	SetOnConnStop(func(IConn))
-	CallOnConnStart(conn IConn)
-	CallOnConnStop(conn IConn)
+	GetOnConnStart() func(IConn)
+	GetOnConnStop()  func(IConn)
 }

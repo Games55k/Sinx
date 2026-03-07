@@ -7,14 +7,12 @@ import (
 	"github.com/Games55k/Sinx/siface"
 )
 
-// 客户端接口实现
 type Client struct {
 	Name      string
 	IPVersion string
 	IP        string
 	Port      int
 	conn      siface.IConn
-	// connMux     sync.Mutex
 	onConnStart func(conn siface.IConn)
 	onConnStop  func(conn siface.IConn)
 	msgHandler  siface.IMsgHandle
@@ -31,7 +29,9 @@ func NewClient(name, ipVersion, ip string, port int) siface.IClient {
 		IP:        ip,
 		Port:      port,
 
-		msgHandler: NewMsgHandle(),
+		msgHandler:  NewMsgHandle(),
+		onConnStart: func(conn siface.IConn) {},
+		onConnStop:  func(conn siface.IConn) {},
 	}
 	return c
 }
@@ -70,9 +70,8 @@ func (c *Client) Start() {
 }
 func (c *Client) Stop() {
 	con := c.Conn()
-	if con != nil {
-		con.Stop()
-	}
+	con.Stop()
+	c.exitChan <- struct{}{}
 }
 func (c *Client) Conn() siface.IConn {
 	return c.conn

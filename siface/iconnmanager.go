@@ -1,9 +1,9 @@
 package siface
 
 type IConnManager interface {
-	Add(conn IConn)                   //添加链接
-	Remove(conn IConn)                //删除连接
-	Get(connID uint32) (IConn, error) //利用ConnID获取链接
-	Len() int                               //获取当前连接
-	ClearConn()                             //删除并停止所有链接
+	Add(conn IConn)
+	Remove(conn IConn)
+	Get(connID uint32) (IConn, error)
+	Len() int
+	ClearConn()
 }
