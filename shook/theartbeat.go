@@ -1,4 +1,4 @@
-package stimer
+package shook
 
 import (
 	"fmt"

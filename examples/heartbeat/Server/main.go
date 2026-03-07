@@ -6,7 +6,7 @@ import (
 	"github.com/Games55k/Sinx/siface"
 	"github.com/Games55k/Sinx/snet"
 	"github.com/Games55k/Sinx/srouter"
-	"github.com/Games55k/Sinx/stimer"
+	"github.com/Games55k/Sinx/shook"
 )
 
 type helloRouter struct {
@@ -28,8 +28,8 @@ func main() {
 	s.AddRouter(srouter.MsgIDHeartbeatRequest, &srouter.HeartbeatPingRouter{})
 	s.AddRouter(srouter.MsgIDHeartbeatResponse, &srouter.HeartbeatPongRouter{})
 	s.SetOnConnStart(func(conn siface.IConnection) {
-		go stimer.StartHeartbeat(conn)
-		go stimer.StartHeartbeatChecker(conn)
+		go shook.StartHeartbeat(conn)
+		go shook.StartHeartbeatChecker(conn)
 	})
 	s.AddRouter(0, &helloRouter{})
 	//开启服务
