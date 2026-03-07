@@ -1,30 +1,13 @@
-package main
+package snet
 
 import (
 	"fmt"
 	"net"
 	"time"
-
-	"github.com/Games55k/Sinx/snet"
+	"testing"
 )
 
-func main() {
-	go StartServer()
-	go StartClient()
-	time.Sleep(100 * time.Second)
-}
-
-// Server 模块的测试函数
-func StartServer() {
-
-	//1 创建一个server 句柄 s
-	s := snet.NewServer("[cinx V0.2]")
-
-	//2 开启服务
-	s.Serve()
-}
-
-func StartClient() {
+func ClientTest() {
 
 	fmt.Println("Client Test ... start")
 	//3秒之后发起测试请求，给服务端开启服务的机会
@@ -37,7 +20,7 @@ func StartClient() {
 	}
 
 	for {
-		_, err := conn.Write([]byte("hahaha"))
+		_, err := conn.Write([]byte("Hello Sinx"))
 		if err != nil {
 			fmt.Println("write error err ", err)
 			return
@@ -54,4 +37,16 @@ func StartClient() {
 
 		time.Sleep(1 * time.Second)
 	}
+}
+
+// Server 模块的测试函数
+func TestServer(t *testing.T) {
+
+	//1 创建一个server 句柄 s
+	s := NewServer("[cinx V0.3]")
+
+	go ClientTest()
+
+	//2 开启服务
+	s.Serve()
 }
