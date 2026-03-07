@@ -12,7 +12,6 @@ type PingRouter struct {
 	snet.BaseRouter //一定要先基础BaseRouter
 }
 
-// Test PreHandle
 func (this *PingRouter) PreHandle(request siface.IRequest) {
 	fmt.Println("Call Router PreHandle")
 	_, err := request.GetConnection().GetTCPConnection().Write([]byte("before ping ....\n"))
@@ -21,7 +20,6 @@ func (this *PingRouter) PreHandle(request siface.IRequest) {
 	}
 }
 
-// Test Handle
 func (this *PingRouter) Handle(request siface.IRequest) {
 	fmt.Println("Call PingRouter Handle")
 	_, err := request.GetConnection().GetTCPConnection().Write([]byte("ping...ping...ping\n"))
@@ -30,7 +28,6 @@ func (this *PingRouter) Handle(request siface.IRequest) {
 	}
 }
 
-// Test PostHandle
 func (this *PingRouter) PostHandle(request siface.IRequest) {
 	fmt.Println("Call Router PostHandle")
 	_, err := request.GetConnection().GetTCPConnection().Write([]byte("After ping .....\n"))
@@ -41,7 +38,7 @@ func (this *PingRouter) PostHandle(request siface.IRequest) {
 
 func main() {
 	//创建一个server句柄
-	s := snet.NewServer("[zinx V0.3]")
+	s := snet.NewServer()
 
 	s.AddRouter(&PingRouter{})
 

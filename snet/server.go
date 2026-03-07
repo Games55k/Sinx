@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Games55k/Sinx/siface"
+	"github.com/Games55k/Sinx/sutils"
 )
 
 // iServer 接口实现，定义一个Server服务类
@@ -34,6 +35,11 @@ func CallBackToClient(conn *net.TCPConn, data []byte, cnt int) error {
 
 func (s *Server) Start() {
 	fmt.Printf("[START] Server listenner at IP: %s, Port %d, is starting\n", s.IP, s.Port)
+
+	fmt.Printf("[Sinx] Version: %s, MaxConn: %d,  MaxPacketSize: %d\n",
+		sutils.GlobalObject.Version,
+		sutils.GlobalObject.MaxConn,
+		sutils.GlobalObject.MaxPacketSize)
 
 	go func() {
 		//1 获取一个TCP的Addr
@@ -103,12 +109,15 @@ func (s *Server) AddRouter(router siface.IRouter) {
 }
 
 /*创建一个服务器句柄*/
-func NewServer(name string) siface.IServer {
+func NewServer() siface.IServer {
+	//先初始化全局配置文件
+	sutils.GlobalObject.Reload()
 	s := &Server{
-		Name:      name,
+		Name:      sutils.GlobalObject.Name,
 		IPVersion: "tcp4",
-		IP:        "0.0.0.0",
-		Port:      7777,
+		IP:        sutils.GlobalObject.Host,
+		Port:      sutils.GlobalObject.TcpPort,
+		Router:    nil,
 	}
 
 	return s

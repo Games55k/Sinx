@@ -43,7 +43,7 @@ func ClientTest() {
 func TestServer(t *testing.T) {
 
 	//1 创建一个server 句柄 s
-	s := NewServer("[cinx V0.3]")
+	s := NewServer()
 
 	go ClientTest()
 
