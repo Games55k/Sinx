@@ -23,7 +23,7 @@ type Connection struct {
 	IsClosedOnce atomic.Bool
 
 	MsgHandler   siface.IMsgHandle
-	ExitBuffChan chan struct{}
+	ExitChan chan struct{}
 
 	msgChan      chan []byte
 	msgBuffChan  chan []byte
@@ -39,13 +39,13 @@ type Connection struct {
 	wg          *sync.WaitGroup
 }
 
-func NewConntion(server siface.IServer, conn *net.TCPConn, connID uint32, msgHandler siface.IMsgHandle) *Connection {
+func NewConntion(server siface.IServer, conn *net.TCPConn, connID uint32, msgHandler siface.IMsgHandle) (*Connection, error) {
 	c := &Connection{
 		TcpServer:    server,
 		Conn:         conn,
 		ConnID:       connID,
 		MsgHandler:   msgHandler,
-		ExitBuffChan: make(chan struct{}, 1),
+		ExitChan: make(chan struct{}),
 		msgChan:      make(chan []byte),
 		msgBuffChan:  make(chan []byte, sutils.GlobalObject.MaxMsgChanLen),
 		writerClosedChan: make(chan struct{}),
@@ -58,8 +58,8 @@ func NewConntion(server siface.IServer, conn *net.TCPConn, connID uint32, msgHan
 	c.IsAborted.Store(false)
 	c.IsClosedOnce.Store(false)
 
-	server.GetConnMgr().Add(c)
-	return c
+	err := server.GetConnMgr().Add(c)
+	return c, err
 }
 
 func NewClientConn(client siface.IClient, conn *net.TCPConn) siface.IConn {
@@ -68,7 +68,7 @@ func NewClientConn(client siface.IClient, conn *net.TCPConn) siface.IConn {
 		Conn:         conn,
 		ConnID:       0,
 		MsgHandler:   client.GetMsgHandler(),
-		ExitBuffChan: make(chan struct{}, 1),
+		ExitChan:     make(chan struct{}),
 		msgChan:      make(chan []byte),
 		msgBuffChan:  make(chan []byte, sutils.GlobalObject.MaxMsgChanLen),
 		property:     make(map[string]interface{}),

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Games55k/Sinx/siface"
 	"github.com/Games55k/Sinx/snet"
@@ -25,5 +26,8 @@ func main() {
 
 	s.AddRouter(0, &helloRouter{})
 
-	s.Serve()
+	s.Start()
+
+	time.Sleep(5 * time.Second)
+	s.Stop()
 }

@@ -17,6 +17,7 @@ type Server struct {
 	ConnMgr     siface.IConnManager
 	onConnStart func(conn siface.IConn)
 	onConnStop  func(conn siface.IConn)
+	ExitChan chan struct{}
 }
 
 func NewServer() siface.IServer {
@@ -32,6 +33,7 @@ func NewServer() siface.IServer {
 		ConnMgr:    NewConnManager(),
 		onConnStart: func(conn siface.IConn) {},
 		onConnStop:  func(conn siface.IConn) {},
+		ExitChan:    make(chan struct{}),
 	}
 	return s
 }
@@ -46,52 +48,59 @@ func (s *Server) Start() {
 
 	s.msgHandler.StartWorkerPool()
 
-	ready := make(chan struct{})
+	addr, err := net.ResolveTCPAddr(s.IPVersion, fmt.Sprintf("%s:%d", s.IP, s.Port))
+	if err != nil {
+		fmt.Println("[Cinx] resolve tcp address err: ", err)
+		return
+	}
+
+	listenner, err := net.ListenTCP(s.IPVersion, addr)
+	if err != nil {
+		fmt.Println("[Cinx] listen", s.IPVersion, "err", err)
+		return
+	}
+	fmt.Println("[Cinx] Listenning...")
 
 	go func() {
-		addr, err := net.ResolveTCPAddr(s.IPVersion, fmt.Sprintf("%s:%d", s.IP, s.Port))
-		if err != nil {
-			fmt.Println("[Sinx] resolve tcp address err: ", err)
-			return
-		}
-
-		listenner, err := net.ListenTCP(s.IPVersion, addr)
-		if err != nil {
-			fmt.Println("[Sinx] listen", s.IPVersion, "err", err)
-			return
-		}
-
-		fmt.Println("[Sinx] Listenning...")
-
-		ready <- struct{}{}
-
 		var cid uint32 = 0
 
 		for {
-			conn, err := listenner.AcceptTCP()
-			if err != nil {
-				fmt.Println("[Sinx] Accept err ", err)
-				continue
+			select {
+			case <-s.ExitChan:
+				err := listenner.Close()
+				if err != nil {
+					fmt.Println("[Cinx] Listenner close err ", err)
+				}
+				return
+			default:
+				conn, err := listenner.AcceptTCP()
+				if err != nil {
+					fmt.Println("[Cinx] Accept err ", err)
+					continue
+				}
+
+				if s.ConnMgr.Len() >= sutils.GlobalObject.MaxConn {
+					conn.Close()
+					continue
+				}
+
+				dealConn, err := NewConntion(s, conn, cid, s.msgHandler)
+				if err != nil {
+					fmt.Println("[Cinx] Err ", err)
+					return
+				}
+				cid++
+
+				go dealConn.Start()
 			}
-
-			if s.ConnMgr.Len() >= sutils.GlobalObject.MaxConn {
-				conn.Close()
-				continue
-			}
-
-			dealConn := NewConntion(s, conn, cid, s.msgHandler)
-			cid++
-
-			go dealConn.Start()
-		}
+		}	
 	}()
-	<-ready
 }
 
 func (s *Server) Stop() {
+	close(s.ExitChan)
+	s.ConnMgr.ClearConns()
 	fmt.Println("[Sinx] stop server , name ", s.Name)
-
-	s.ConnMgr.ClearConn()
 }
 
 func (s *Server) Serve() {

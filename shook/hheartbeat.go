@@ -22,7 +22,7 @@ func StartHeartbeat(conn siface.IConn) {
 				fmt.Println("[Cinx] Send heartbeat request error:", err)
 				return
 			}
-		case <-conn.(*snet.Connection).ExitBuffChan:
+		case <-conn.(*snet.Connection).ExitChan:
 			return
 		}
 	}

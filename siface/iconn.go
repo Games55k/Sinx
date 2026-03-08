@@ -1,6 +1,8 @@
 package siface
 
-import "net"
+import (
+	"net"
+)
 
 type IConn interface {
 	Start()
