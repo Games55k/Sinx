@@ -17,7 +17,8 @@ type Client struct {
 	onConnStop  func(conn siface.IConn)
 	msgHandler  siface.IMsgHandle
 
-	exitChan chan struct{}
+	exitChan  chan struct{}
+	readyChan chan struct{}
 }
 
 var _ siface.IClient = (*Client)(nil)
@@ -32,6 +33,7 @@ func NewClient(name, ipVersion, ip string, port int) siface.IClient {
 		msgHandler:  NewMsgHandle(),
 		onConnStart: func(conn siface.IConn) {},
 		onConnStop:  func(conn siface.IConn) {},
+		readyChan:   make(chan struct{}),
 	}
 	return c
 }
@@ -42,8 +44,7 @@ func (c *Client) Restart() {
 }
 
 func (c *Client) Start() {
-	c.exitChan = make(chan struct{})
-	go c.msgHandler.StartWorkerPool()
+	c.msgHandler.StartWorkerPool()
 
 	go func() {
 		addr, err := net.ResolveTCPAddr(c.IPVersion, fmt.Sprintf("%s:%d", c.IP, c.Port))
@@ -59,14 +60,12 @@ func (c *Client) Start() {
 
 		c.conn = NewClientConn(c, conn)
 
-		go c.conn.Start()
+		c.conn.Start()
 
-		select {
-		case <-c.exitChan:
-			fmt.Println("[Sinx] client exit")
-			return
-		}
+		c.readyChan <- struct{}{}
 	}()
+	<-c.readyChan
+	close(c.readyChan)
 }
 func (c *Client) Stop() {
 	con := c.Conn()

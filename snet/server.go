@@ -46,6 +46,8 @@ func (s *Server) Start() {
 
 	s.msgHandler.StartWorkerPool()
 
+	ready := make(chan struct{})
+
 	go func() {
 		addr, err := net.ResolveTCPAddr(s.IPVersion, fmt.Sprintf("%s:%d", s.IP, s.Port))
 		if err != nil {
@@ -60,6 +62,8 @@ func (s *Server) Start() {
 		}
 
 		fmt.Println("[Sinx] Listenning...")
+
+		ready <- struct{}{}
 
 		var cid uint32 = 0
 
@@ -81,6 +85,7 @@ func (s *Server) Start() {
 			go dealConn.Start()
 		}
 	}()
+	<-ready
 }
 
 func (s *Server) Stop() {

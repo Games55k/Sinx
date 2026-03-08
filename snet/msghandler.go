@@ -18,7 +18,6 @@ func NewMsgHandle() *MsgHandle {
 	return &MsgHandle{
 		Apis:           make(map[uint32]siface.IRouter),
 		WorkerPoolSize: sutils.GlobalObject.WorkerPoolSize,
-		//一个 worker 对应一个 task 队列
 		TaskQueues: make([]chan siface.IRequest, sutils.GlobalObject.WorkerPoolSize),
 	}
 }
@@ -31,10 +30,11 @@ func (mh *MsgHandle) DoMsgHandler(request siface.IRequest) {
 		return
 	}
 
-	//执行对应处理方法
 	handler.PreHandle(request)
 	handler.Handle(request)
 	handler.PostHandle(request)
+
+	request.Done()
 }
 
 // 为消息添加具体的处理逻辑

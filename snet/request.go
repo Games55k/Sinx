@@ -1,13 +1,16 @@
 package snet
 
-import "github.com/Games55k/Sinx/siface"
+import (
+	"sync"
+	"github.com/Games55k/Sinx/siface"
+)
 
 type Request struct {
-	conn siface.IConn       //已经和客户端建立好的 链接
-	msg  siface.IMessage    //客户端请求的数据
+	conn siface.IConn
+	msg  siface.IMessage
+	wg   *sync.WaitGroup
 }
 
-//获取请求连接信息
 func (r *Request) GetConn() siface.IConn {
 	return r.conn
 }
@@ -18,4 +21,8 @@ func (r *Request) GetData() []byte {
 
 func (r *Request) GetMsgID() uint32 {
 	return r.msg.GetMsgId()
+}
+
+func (r *Request) Done() {
+	r.wg.Done()
 }
