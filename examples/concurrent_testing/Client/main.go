@@ -21,7 +21,7 @@ func (h *helloRouter) Handle(request siface.IRequest) {
 }
 
 const (
-	concurrency  = 200    // 并发连接数
+	concurrency  = 1      // 并发连接数
 	requestCount = 100000 // 总请求数
 )
 

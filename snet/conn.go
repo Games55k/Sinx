@@ -84,7 +84,6 @@ func NewClientConn(client siface.IClient, conn *net.TCPConn) siface.IConn {
 
 func (c *Connection) StartReader() {
 	fmt.Println("Reader Goroutine is  running")
-	defer fmt.Println(c.RemoteAddr().String(), " conn reader exit!")
 	defer c.Stop()
 
 	for {
@@ -139,7 +138,6 @@ func (c *Connection) StartReader() {
 func (c *Connection) StartWriter() {
 
 	fmt.Println("[Writer Goroutine is running]")
-	defer fmt.Println(c.RemoteAddr().String(), "[conn Writer exit!]")
 
 	for {
 		select {
@@ -150,7 +148,6 @@ func (c *Connection) StartWriter() {
 				}
 			} else {
 				fmt.Println("msgChan is Closed")
-				return
 			}
 		case data, ok := <-c.msgBuffChan:
 			if ok {
@@ -159,7 +156,6 @@ func (c *Connection) StartWriter() {
 				}
 			} else {
 				fmt.Println("msgBuffChan is Closed")
-				return
 			}
 		}
 	}

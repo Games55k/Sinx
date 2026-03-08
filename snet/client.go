@@ -46,31 +46,25 @@ func (c *Client) Restart() {
 func (c *Client) Start() {
 	c.msgHandler.StartWorkerPool()
 
-	go func() {
-		addr, err := net.ResolveTCPAddr(c.IPVersion, fmt.Sprintf("%s:%d", c.IP, c.Port))
-		if err != nil {
-			fmt.Println("[Cinx] resolve tcp address err: ", err)
-			return
-		}
+	addr, err := net.ResolveTCPAddr(c.IPVersion, fmt.Sprintf("%s:%d", c.IP, c.Port))
+	if err != nil {
+		fmt.Println("[Sinx] resolve tcp address err: ", err)
+		return
+	}
+	conn, err := net.DialTCP(c.IPVersion, nil, addr)
+	if err != nil {
+		fmt.Println("[Sinx] dial tcp err: ", err)
+		return
+	}
+	c.conn = NewClientConn(c, conn)
 
-		conn, err := net.DialTCP(c.IPVersion, nil, addr)
-		if err != nil {
-			fmt.Println("[Cinx] dial tcp err: ", err)
-		}
-
-		c.conn = NewClientConn(c, conn)
-
-		c.conn.Start()
-
-		c.readyChan <- struct{}{}
-	}()
-	<-c.readyChan
-	close(c.readyChan)
+	go c.conn.Start()
 }
+
 func (c *Client) Stop() {
 	con := c.Conn()
 	con.Stop()
-	c.exitChan <- struct{}{}
+	c.msgHandler.Stop()
 }
 func (c *Client) Conn() siface.IConn {
 	return c.conn
