@@ -17,7 +17,7 @@ type Server struct {
 	ConnMgr     siface.IConnManager
 	onConnStart func(conn siface.IConn)
 	onConnStop  func(conn siface.IConn)
-	ExitChan chan struct{}
+	ExitChan    chan struct{}
 }
 
 func NewServer() siface.IServer {
@@ -25,12 +25,12 @@ func NewServer() siface.IServer {
 	sutils.GlobalObject.Reload()
 
 	s := &Server{
-		Name:       sutils.GlobalObject.Name,
-		IPVersion:  "tcp4",
-		IP:         sutils.GlobalObject.Host,
-		Port:       sutils.GlobalObject.TcpPort,
-		msgHandler: NewMsgHandle(),
-		ConnMgr:    NewConnManager(),
+		Name:        sutils.GlobalObject.Name,
+		IPVersion:   "tcp4",
+		IP:          sutils.GlobalObject.Host,
+		Port:        sutils.GlobalObject.TcpPort,
+		msgHandler:  NewMsgHandle(),
+		ConnMgr:     NewConnManager(),
 		onConnStart: func(conn siface.IConn) {},
 		onConnStop:  func(conn siface.IConn) {},
 		ExitChan:    make(chan struct{}),
@@ -50,16 +50,16 @@ func (s *Server) Start() {
 
 	addr, err := net.ResolveTCPAddr(s.IPVersion, fmt.Sprintf("%s:%d", s.IP, s.Port))
 	if err != nil {
-		fmt.Println("[Cinx] resolve tcp address err: ", err)
+		fmt.Println("[Sinx] resolve tcp address err: ", err)
 		return
 	}
 
 	listenner, err := net.ListenTCP(s.IPVersion, addr)
 	if err != nil {
-		fmt.Println("[Cinx] listen", s.IPVersion, "err", err)
+		fmt.Println("[Sinx] listen", s.IPVersion, "err", err)
 		return
 	}
-	fmt.Println("[Cinx] Listenning...")
+	fmt.Println("[Sinx] Listenning...")
 
 	go func() {
 		var cid uint32 = 0
@@ -69,13 +69,13 @@ func (s *Server) Start() {
 			case <-s.ExitChan:
 				err := listenner.Close()
 				if err != nil {
-					fmt.Println("[Cinx] Listenner close err ", err)
+					fmt.Println("[Sinx] Listenner close err ", err)
 				}
 				return
 			default:
 				conn, err := listenner.AcceptTCP()
 				if err != nil {
-					fmt.Println("[Cinx] Accept err ", err)
+					fmt.Println("[Sinx] Accept err ", err)
 					continue
 				}
 
@@ -86,14 +86,14 @@ func (s *Server) Start() {
 
 				dealConn, err := NewConntion(s, conn, cid, s.msgHandler)
 				if err != nil {
-					fmt.Println("[Cinx] Err ", err)
+					fmt.Println("[Sinx] Err ", err)
 					return
 				}
 				cid++
 
 				go dealConn.Start()
 			}
-		}	
+		}
 	}()
 }
 

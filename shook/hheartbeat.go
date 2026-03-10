@@ -19,7 +19,7 @@ func StartHeartbeat(conn siface.IConn) {
 		case <-ticker.C:
 			err := conn.SendBuffMsg(srouter.MsgIDHeartbeatRequest, []byte("ping"))
 			if err != nil {
-				fmt.Println("[Cinx] Send heartbeat request error:", err)
+				fmt.Println("[Sinx] Send heartbeat request error:", err)
 				return
 			}
 		case <-conn.(*snet.Connection).ExitChan:
