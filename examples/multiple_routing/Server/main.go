@@ -7,12 +7,10 @@ import (
 	"github.com/Games55k/Sinx/snet"
 )
 
-// ping test 自定义路由
 type PingRouter struct {
 	snet.BaseRouter
 }
 
-// Ping Handle
 func (this *PingRouter) Handle(request siface.IRequest) {
 	fmt.Println("Call PingRouter Handle")
 	//先读取客户端的数据，再回写ping...ping...ping
@@ -29,8 +27,7 @@ type HelloCinxRouter struct {
 }
 
 func (this *HelloCinxRouter) Handle(request siface.IRequest) {
-	fmt.Println("Call HelloCinxRouter Handle")
-	//先读取客户端的数据，再回写ping...ping...ping
+	fmt.Println("Call HelloSinxRouter Handle")
 	fmt.Println("recv from client : msgId=", request.GetMsgID(), ", data=", string(request.GetData()))
 
 	err := request.GetConn().SendMsg(1, []byte("Hello Sinx Router"))
@@ -42,7 +39,6 @@ func (this *HelloCinxRouter) Handle(request siface.IRequest) {
 func main() {
 	s := snet.NewServer()
 
-	//配置路由
 	s.AddRouter(0, &PingRouter{})
 	s.AddRouter(1, &HelloCinxRouter{})
 

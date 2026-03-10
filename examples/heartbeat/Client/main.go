@@ -16,10 +16,10 @@ type helloRouter struct {
 
 func (h *helloRouter) Handle(request siface.IRequest) {
 	// 请求，直接回复响应
-	fmt.Println("[Cinx] Received:", string(request.GetData()))
+	fmt.Println("[Sinx] Received:", string(request.GetData()))
 	err := request.GetConn().SendMsg(0, []byte("received"))
 	if err != nil {
-		fmt.Println("[Cinx] error:", err)
+		fmt.Println("[Sinx] error:", err)
 	}
 }
 
@@ -86,18 +86,25 @@ func main() {
 
 	call(0, "hello")
 
+	Loop:
 	for {
 		msg := get()
-		if msg.Id == 0 {
+
+		switch msg.Id {
+		case 0:
 			call(0, "get: "+string(msg.Data))
-		} else if msg.Id == 1001 {
+
+		case 1001:
 			// call(1002, "get: "+string(msg.Data))
-		} else if msg.Id == 1002 {
+
+		case 1002:
 			call(1001, "get: "+string(msg.Data))
-		} else {
+
+		default:
 			fmt.Println("error")
-			break
+			break Loop
 		}
+
 		time.Sleep(1 * time.Second)
 	}
 }

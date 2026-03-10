@@ -13,7 +13,7 @@ type helloRouter struct {
 }
 
 func (h *helloRouter) Handle(request siface.IRequest) {
-	fmt.Println("[Cinx] Received:", string(request.GetData()))
+	fmt.Println("[Sinx] Received:", string(request.GetData()))
 }
 
 func main() {
