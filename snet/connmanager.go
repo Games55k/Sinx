@@ -32,10 +32,10 @@ func (connMgr *ConnManager) Add(conn siface.IConn) error {
 }
 
 func (connMgr *ConnManager) Remove(conn siface.IConn) {
-	connMgr.conns.Delete(conn.GetConnID())
-	connMgr.connsCount.Add(-1)
-
-	fmt.Println("connection Remove ConnID=", conn.GetConnID(), " successfully: conn num = ", connMgr.Len())
+	if _, loaded := connMgr.conns.LoadAndDelete(conn.GetConnID()); loaded {
+		connMgr.connsCount.Add(-1)
+		fmt.Println("connection Remove ConnID=", conn.GetConnID(), " successfully: conn num = ", connMgr.Len())
+	}
 }
 
 func (connMgr *ConnManager) Get(connID uint32) (siface.IConn, error) {

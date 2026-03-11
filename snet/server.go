@@ -122,7 +122,7 @@ func (s *Server) SetOnConnStart(hookFunc func(siface.IConn)) {
 }
 
 func (s *Server) SetOnConnStop(hookFunc func(siface.IConn)) {
-	s.onConnStart = hookFunc
+	s.onConnStop = hookFunc
 }
 
 func (s *Server) GetOnConnStart() func(siface.IConn) {

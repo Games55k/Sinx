@@ -8,11 +8,11 @@ import (
 )
 
 type Client struct {
-	Name      string
-	IPVersion string
-	IP        string
-	Port      int
-	conn      siface.IConn
+	Name        string
+	IPVersion   string
+	IP          string
+	Port        int
+	conn        siface.IConn
 	onConnStart func(conn siface.IConn)
 	onConnStop  func(conn siface.IConn)
 	msgHandler  siface.IMsgHandle
@@ -63,7 +63,9 @@ func (c *Client) Start() {
 
 func (c *Client) Stop() {
 	con := c.Conn()
-	con.Stop()
+	if con != nil {
+		con.Stop()
+	}
 	c.msgHandler.Stop()
 }
 func (c *Client) Conn() siface.IConn {

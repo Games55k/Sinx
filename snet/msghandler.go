@@ -9,21 +9,23 @@ import (
 )
 
 type MsgHandle struct {
-	Apis           map[uint32]siface.IRouter // 映射 MsgID 对应的处理方法
-	WorkerPoolSize uint32                    // worker pool 大小
-	TaskQueues     []chan siface.IRequest    // worker 获取任务的消息队列
+	Apis           map[uint32]siface.IRouter
+	WorkerPoolSize uint32
+	TaskQueues     []chan siface.IRequest
 }
 
 func NewMsgHandle() *MsgHandle {
 	return &MsgHandle{
 		Apis:           make(map[uint32]siface.IRouter),
 		WorkerPoolSize: sutils.GlobalObject.WorkerPoolSize,
-		TaskQueues: make([]chan siface.IRequest, sutils.GlobalObject.WorkerPoolSize),
+		TaskQueues:     make([]chan siface.IRequest, sutils.GlobalObject.WorkerPoolSize),
 	}
 }
 
 // 非阻塞方式处理消息
 func (mh *MsgHandle) DoMsgHandler(request siface.IRequest) {
+	defer request.Done()
+
 	handler, ok := mh.Apis[request.GetMsgID()]
 	if !ok {
 		fmt.Println("api msgId = ", request.GetMsgID(), " is not FOUND!")
@@ -33,8 +35,6 @@ func (mh *MsgHandle) DoMsgHandler(request siface.IRequest) {
 	handler.PreHandle(request)
 	handler.Handle(request)
 	handler.PostHandle(request)
-
-	request.Done()
 }
 
 // 为消息添加具体的处理逻辑
@@ -81,6 +81,8 @@ func (mh *MsgHandle) SendMsgToTaskQueue(request siface.IRequest) {
 
 func (mh *MsgHandle) Stop() {
 	for _, c := range mh.TaskQueues {
-		close(c)
+		if c != nil {
+			close(c)
+		}
 	}
 }

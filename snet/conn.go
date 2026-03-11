@@ -1,15 +1,14 @@
 package snet
 
 import (
-	"fmt"
-	"net"
 	"errors"
-	"io"
-	"sync"
-	"sync/atomic"
+	"fmt"
 	"github.com/Games55k/Sinx/siface"
 	"github.com/Games55k/Sinx/sutils"
-	
+	"io"
+	"net"
+	"sync"
+	"sync/atomic"
 )
 
 type Connection struct {
@@ -22,11 +21,11 @@ type Connection struct {
 	IsAborted    atomic.Bool
 	IsClosedOnce atomic.Bool
 
-	MsgHandler   siface.IMsgHandle
-	ExitChan chan struct{}
+	MsgHandler siface.IMsgHandle
+	ExitChan   chan struct{}
 
-	msgChan      chan []byte
-	msgBuffChan  chan []byte
+	msgChan     chan []byte
+	msgBuffChan chan []byte
 
 	writerClosedChan chan struct{}
 
@@ -36,23 +35,23 @@ type Connection struct {
 	onConnStart func(conn siface.IConn)
 	onConnStop  func(conn siface.IConn)
 
-	wg          *sync.WaitGroup
+	wg *sync.WaitGroup
 }
 
 func NewConntion(server siface.IServer, conn *net.TCPConn, connID uint32, msgHandler siface.IMsgHandle) (*Connection, error) {
 	c := &Connection{
-		TcpServer:    server,
-		Conn:         conn,
-		ConnID:       connID,
-		MsgHandler:   msgHandler,
-		ExitChan: make(chan struct{}),
-		msgChan:      make(chan []byte),
-		msgBuffChan:  make(chan []byte, sutils.GlobalObject.MaxMsgChanLen),
+		TcpServer:        server,
+		Conn:             conn,
+		ConnID:           connID,
+		MsgHandler:       msgHandler,
+		ExitChan:         make(chan struct{}),
+		msgChan:          make(chan []byte),
+		msgBuffChan:      make(chan []byte, sutils.GlobalObject.MaxMsgChanLen),
 		writerClosedChan: make(chan struct{}),
-		property:     make(map[string]interface{}),
-		onConnStart:  server.GetOnConnStart(),
-		onConnStop:   server.GetOnConnStop(),
-		wg:           &sync.WaitGroup{},
+		property:         make(map[string]interface{}),
+		onConnStart:      server.GetOnConnStart(),
+		onConnStop:       server.GetOnConnStop(),
+		wg:               &sync.WaitGroup{},
 	}
 	c.IsClosed.Store(false)
 	c.IsAborted.Store(false)
@@ -64,17 +63,18 @@ func NewConntion(server siface.IServer, conn *net.TCPConn, connID uint32, msgHan
 
 func NewClientConn(client siface.IClient, conn *net.TCPConn) siface.IConn {
 	c := &Connection{
-		TcpServer:    NewServer(),
-		Conn:         conn,
-		ConnID:       0,
-		MsgHandler:   client.GetMsgHandler(),
-		ExitChan:     make(chan struct{}),
-		msgChan:      make(chan []byte),
-		msgBuffChan:  make(chan []byte, sutils.GlobalObject.MaxMsgChanLen),
-		property:     make(map[string]interface{}),
-		onConnStart:  client.GetOnConnStart(),
-		onConnStop:   client.GetOnConnStop(),
-		wg:           &sync.WaitGroup{},
+		TcpServer:        NewServer(),
+		Conn:             conn,
+		ConnID:           0,
+		MsgHandler:       client.GetMsgHandler(),
+		ExitChan:         make(chan struct{}),
+		msgChan:          make(chan []byte),
+		msgBuffChan:      make(chan []byte, sutils.GlobalObject.MaxMsgChanLen),
+		writerClosedChan: make(chan struct{}),
+		property:         make(map[string]interface{}),
+		onConnStart:      client.GetOnConnStart(),
+		onConnStop:       client.GetOnConnStop(),
+		wg:               &sync.WaitGroup{},
 	}
 	c.IsClosed.Store(false)
 	c.IsAborted.Store(false)
@@ -83,7 +83,7 @@ func NewClientConn(client siface.IClient, conn *net.TCPConn) siface.IConn {
 }
 
 func (c *Connection) StartReader() {
-	fmt.Println("Reader Goroutine is  running")
+	fmt.Println("Reader Goroutine is running")
 	defer c.Stop()
 
 	for {
@@ -98,6 +98,7 @@ func (c *Connection) StartReader() {
 				fmt.Println("read msg head error ", err)
 				c.IsAborted.Store(true)
 			}
+			break
 		}
 
 		msg, err := dp.Unpack(headData)
@@ -125,7 +126,7 @@ func (c *Connection) StartReader() {
 			msg:  msg,
 			wg:   c.wg,
 		}
-		
+
 		c.wg.Add(1)
 		if sutils.GlobalObject.WorkerPoolSize > 0 {
 			c.MsgHandler.SendMsgToTaskQueue(&req)
@@ -136,26 +137,32 @@ func (c *Connection) StartReader() {
 }
 
 func (c *Connection) StartWriter() {
-
 	fmt.Println("[Writer Goroutine is running]")
+	defer close(c.writerClosedChan)
 
-	for {
+	msgChan := c.msgChan
+	msgBuffChan := c.msgBuffChan
+	for msgChan != nil || msgBuffChan != nil {
 		select {
-		case data, ok := <-c.msgChan:
+		case data, ok := <-msgChan:
 			if ok {
 				if _, err := c.Conn.Write(data); err != nil {
 					fmt.Println("Send Data error:, ", err, " Conn Writer exit")
+					return
 				}
 			} else {
 				fmt.Println("msgChan is Closed")
+				msgChan = nil
 			}
-		case data, ok := <-c.msgBuffChan:
+		case data, ok := <-msgBuffChan:
 			if ok {
 				if _, err := c.Conn.Write(data); err != nil {
 					fmt.Println("Send Buff Data error:, ", err, " Conn Writer exit")
+					return
 				}
 			} else {
 				fmt.Println("msgBuffChan is Closed")
+				msgBuffChan = nil
 			}
 		}
 	}
@@ -164,28 +171,30 @@ func (c *Connection) StartWriter() {
 func (c *Connection) Start() {
 
 	go c.StartWriter()
-	
-    go c.StartReader()
+
+	go c.StartReader()
 
 	c.onConnStart(c)
 
 }
 
 func (c *Connection) Stop() {
-	if c.IsClosedOnce.Load() {
+	if !c.IsClosedOnce.CompareAndSwap(false, true) {
 		return
 	}
 
-	c.IsClosedOnce.Store(true)
 	c.IsClosed.Store(true)
+	close(c.ExitChan)
 
 	c.wg.Wait()
+	close(c.msgChan)
+	close(c.msgBuffChan)
+	<-c.writerClosedChan
 
 	c.onConnStop(c)
-	c.Conn.Close()
+	_ = c.Conn.Close()
 
 	c.TcpServer.GetConnMgr().Remove(c)
-	
 }
 
 func (c *Connection) GetTCPConn() *net.TCPConn {
@@ -201,6 +210,10 @@ func (c *Connection) RemoteAddr() net.Addr {
 }
 
 func (c *Connection) SendMsg(msgId uint32, data []byte) error {
+	if c.IsClosed.Load() {
+		return errors.New("connection closed when send msg")
+	}
+
 	dp := NewDataPack()
 	msg, err := dp.Pack(NewMsgPackage(msgId, data))
 	if err != nil {
@@ -208,12 +221,19 @@ func (c *Connection) SendMsg(msgId uint32, data []byte) error {
 		return errors.New("Pack error msg ")
 	}
 
-	c.msgChan <- msg
-
-	return nil
+	select {
+	case <-c.ExitChan:
+		return errors.New("connection closed when send msg")
+	case c.msgChan <- msg:
+		return nil
+	}
 }
 
 func (c *Connection) SendBuffMsg(msgId uint32, data []byte) error {
+	if c.IsClosed.Load() {
+		return errors.New("connection closed when send buff msg")
+	}
+
 	dp := NewDataPack()
 	msg, err := dp.Pack(NewMsgPackage(msgId, data))
 	if err != nil {
@@ -221,9 +241,12 @@ func (c *Connection) SendBuffMsg(msgId uint32, data []byte) error {
 		return errors.New("Pack error msg ")
 	}
 
-	c.msgBuffChan <- msg
-
-	return nil
+	select {
+	case <-c.ExitChan:
+		return errors.New("connection closed when send buff msg")
+	case c.msgBuffChan <- msg:
+		return nil
+	}
 }
 
 func (c *Connection) SetProperty(key string, value interface{}) {
